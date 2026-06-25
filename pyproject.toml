@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jaxweights"
+version = "0.1.0"
+description = "A minimal, noninvasive parameter initialization and trace management layer for JAX."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "jax>=0.4.0",
+    "jaxlib>=0.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+filterwarnings = [
+    "ignore:.*Anonymous parameter used in transformed function.*:UserWarning"
+]
