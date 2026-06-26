@@ -154,6 +154,62 @@ During `apply`, the function execution is re-traced and verified against the bun
 
 ---
 
+## Grouped Fan Initializers
+
+In addition to legacy shape-based initializers, `jaxweights` supports explicit grouped linear fan semantics using compact indexing syntax for all variance scaling/fan-based initializers (LeCun, Xavier/Glorot, He/Kaiming).
+
+### Syntax
+
+```python
+# Grouped fan mode, no packed/batch dims
+# shape == in_dims + out_dims
+# fan_in == prod(in_dims), fan_out == prod(out_dims)
+initializer[:](in_dims...)(out_dims...)
+
+# Packed grouped fan mode, with packed/batch dims
+# shape == batch_dims + in_dims + out_dims
+# fan_in == prod(in_dims), fan_out == prod(out_dims)
+initializer[batch_dims...](in_dims...)(out_dims...)
+
+# Named variants
+initializer['w', :](in_dims...)(out_dims...)
+initializer['w', batch_dims...](in_dims...)(out_dims...)
+```
+
+### Examples
+
+```python
+# QKV packed transformer projection:
+w = jw.xavier_normal[3](cfg.dim)(cfg.heads, hd)
+# shape == (3, cfg.dim, cfg.heads, hd)
+# fan_in == cfg.dim
+# fan_out == cfg.heads * hd
+
+# Attention output projection:
+w = jw.xavier_normal[:](cfg.heads, hd)(cfg.dim)
+# shape == (cfg.heads, hd, cfg.dim)
+# fan_in == cfg.heads * hd
+# fan_out == cfg.dim
+```
+
+### Transformer Usage
+
+```python
+q, k, v = jnp.einsum(
+    "bsd,qdhk->qbhsk",
+    x,
+    jw.xavier_normal[3](cfg.dim)(cfg.heads, hd),
+)
+
+y = jnp.einsum(
+    "bhsk,hkd->bsd",
+    y,
+    jw.xavier_normal[:](cfg.heads, hd)(cfg.dim),
+)
+```
+
+---
+
 ## Caveats and Design Rules
 
 1. **Always Initialize Outside `jit`**: Run `model.init(key, ...)` eagerly outside of any compiled contexts, compile/execute `model.apply(bundle, ...)` within `jit`.

@@ -22,6 +22,7 @@ from jaxweights._initializers import (
     kaiming_uniform,
     orthogonal,
     identity,
+    xavier,
     he,
 )
 from jaxweights._errors import (
@@ -65,6 +66,7 @@ __all__ = [
     "kaiming_uniform",
     "orthogonal",
     "identity",
+    "xavier",
     "he",
     "JaxWeightsError",
     "ContextError",
